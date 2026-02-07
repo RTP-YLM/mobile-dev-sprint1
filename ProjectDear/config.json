@@ -1,0 +1,35 @@
+{
+  "mt5": {
+    "login": 415211240,
+    "password": "3605@Dear Sv.",
+    "server": "Exness-MT5Trial14",
+    "path": "/Applications/MetaTrader 5.app"
+  },
+  "strategy": {
+    "symbol": "XAUUSD",
+    "timeframe": "M5",
+    "risk_percent": 2.0,
+    "stop_loss_pips": 15,
+    "take_profit_pips": 30,
+    "max_trades_per_day": 5,
+    "max_consecutive_losses": 3,
+    "trading_hours": {
+      "start": 14,
+      "end": 2
+    }
+  },
+  "indicators": {
+    "rsi_period": 14,
+    "rsi_oversold": 30,
+    "rsi_overbought": 70,
+    "bb_period": 20,
+    "bb_std": 2,
+    "atr_period": 14,
+    "atr_threshold": 1.5,
+    "volume_ma_period": 20
+  },
+  "account": {
+    "initial_balance": 300,
+    "currency": "USD"
+  }
+}

@@ -1,0 +1,14 @@
+# Terraform Variables Example
+# Copy to terraform.tfvars and fill in your values
+
+do_token = "your-digitalocean-token-here"
+
+environment = "staging"
+
+region = "sgp1"  # Singapore
+
+droplet_size = "s-2vcpu-2gb"
+
+ssh_keys = [
+  "your-ssh-key-fingerprint-here"
+]

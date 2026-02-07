@@ -1,0 +1,147 @@
+version: '3.9'
+
+services:
+  # ============================================
+  # Backend Application
+  # ============================================
+  app:
+    build:
+      context: ../../
+      dockerfile: devops/docker/Dockerfile.dev
+    container_name: app-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debugger port
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/app_dev
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-change-in-production
+      LOG_LEVEL: debug
+    volumes:
+      - ../../:/app
+      - /app/node_modules
+      - ../../logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: app-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_dev
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Redis Cache
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: app-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ============================================
+  # pgAdmin - Database Management (Optional)
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: app-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@localhost.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - app-network
+    profiles:
+      - tools
+
+  # ============================================
+  # Redis Commander - Redis Management (Optional)
+  # ============================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: app-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    networks:
+      - app-network
+    profiles:
+      - tools
+
+  # ============================================
+  # Mailhog - Email Testing (Optional)
+  # ============================================
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: app-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - app-network
+    profiles:
+      - tools
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  pgadmin-data:
+    driver: local

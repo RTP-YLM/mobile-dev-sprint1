@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeSync Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 50px;
+            padding: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #f5f5f7;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 35px;
+            background: #000;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 100;
+        }
+        
+        .screen-content {
+            height: 100%;
+            overflow-y: auto;
+            padding: 50px 20px 30px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        
+        .header .icon {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 20px;
+        }
+        
+        /* Status Card */
+        .status-card {
+            background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(52,199,89,0.3);
+        }
+        
+        .status-card.warning {
+            background: linear-gradient(135deg, #ff9500 0%, #ffcc00 100%);
+            box-shadow: 0 10px 30px rgba(255,149,0,0.3);
+        }
+        
+        .status-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        /* Main Power Card */
+        .power-card {
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .power-label {
+            font-size: 15px;
+            color: #8e8e93;
+            margin-bottom: 10px;
+        }
+        
+        .power-value {
+            font-size: 56px;
+            font-weight: 700;
+            color: #1c1c1e;
+            line-height: 1;
+        }
+        
+        .power-unit {
+            font-size: 24px;
+            color: #8e8e93;
+            font-weight: 500;
+        }
+        
+        .gauge-container {
+            margin: 25px 0;
+            position: relative;
+            height: 120px;
+        }
+        
+        .gauge-bg {
+            width: 200px;
+            height: 100px;
+            background: #f2f2f7;
+            border-radius: 100px 100px 0 0;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gauge-fill {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 100px;
+            background: linear-gradient(180deg, #34c759 0%, #30d158 100%);
+            border-radius: 100px 100px 0 0;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-45deg);
+        }
+        
+        .gauge-needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            height: 90px;
+            background: #1c1c1e;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            border-radius: 2px;
+        }
+        
+        .gauge-center {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: #1c1c1e;
+            border-radius: 50%;
+            border: 4px solid white;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-bottom: 6px;
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        
+        .stat-sub {
+            font-size: 12px;
+            color: #34c759;
+            margin-top: 4px;
+        }
+        
+        .stat-sub.negative {
+            color: #ff3b30;
+        }
+        
+        /* Cost Card */
+        .cost-card {
+            background: linear-gradient(135deg, #5856d6 0%, #af52de 100%);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(88,86,214,0.3);
+        }
+        
+        .cost-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .cost-title {
+            font-size: 15px;
+            opacity: 0.9;
+        }
+        
+        .cost-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .cost-amount {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .cost-unit {
+            font-size: 18px;
+            opacity: 0.8;
+        }
+        
+        .cost-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .cost-bar-fill {
+            height: 100%;
+            width: 65%;
+            background: white;
+            border-radius: 3px;
+        }
+        
+        /* Device List */
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1c1c1e;
+            margin: 25px 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title a {
+            font-size: 14px;
+            color: #007aff;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .device-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        
+        .device-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: #f2f2f7;
+        }
+        
+        .device-icon.active {
+            background: #e8f5e9;
+        }
+        
+        .device-info {
+            flex: 1;
+        }
+        
+        .device-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 4px;
+        }
+        
+        .device-status {
+            font-size: 13px;
+            color: #8e8e93;
+        }
+        
+        .device-status.online {
+            color: #34c759;
+        }
+        
+        .device-power {
+            text-align: right;
+        }
+        
+        .device-watt {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        
+        .device-toggle {
+            width: 50px;
+            height: 30px;
+            background: #34c759;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .device-toggle::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .device-toggle.off {
+            background: #e5e5ea;
+        }
+        
+        .device-toggle.off::after {
+            right: auto;
+            left: 2px;
+        }
+        
+        /* Chart Section */
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        
+        .chart-tabs {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chart-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            background: #f2f2f7;
+            color: #8e8e93;
+        }
+        
+        .chart-tab.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .chart-placeholder {
+            height: 150px;
+            background: linear-gradient(180deg, rgba(52,199,89,0.1) 0%, transparent 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(180deg, rgba(52,199,89,0.3) 0%, rgba(52,199,89,0.05) 100%);
+            clip-path: polygon(0% 80%, 10% 60%, 20% 70%, 30% 40%, 40% 50%, 50% 30%, 60% 40%, 70% 20%, 80% 35%, 90% 25%, 100% 40%, 100% 100%, 0% 100%);
+        }
+        
+        /* Alert Badge */
+        .alert-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 20px;
+            height: 20px;
+            background: #ff3b30;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        /* Screen Label */
+        .screen-label {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* Alert List */
+        .alert-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border-left: 4px solid #ff9500;
+        }
+        
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            background: #fff3e0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 4px;
+        }
+        
+        .alert-time {
+            font-size: 12px;
+            color: #8e8e93;
+        }
+        
+        /* Bottom Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 85px;
+            background: white;
+            border-top: 1px solid #e5e5ea;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 10px;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 20px;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            color: #8e8e93;
+        }
+        
+        .nav-item.active .nav-icon {
+            color: #007aff;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+            color: #8e8e93;
+        }
+        
+        .nav-item.active .nav-label {
+            color: #007aff;
+            font-weight: 600;
+        }
+        
+        /* Device Detail Header */
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-size: 20px;
+        }
+        
+        .detail-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1c1c1e;
+        }
+        
+        /* Large Toggle */
+        .large-toggle {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .toggle-info h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1c1c1e;
+            margin-bottom: 4px;
+        }
+        
+        .toggle-info p {
+            font-size: 14px;
+            color: #8e8e93;
+        }
+        
+        .toggle-switch {
+            width: 60px;
+            height: 36px;
+            background: #34c759;
+            border-radius: 18px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Screen 1: Dashboard -->
+    <div>
+        <div class="phone-frame">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="screen-content">
+                    <div class="header">
+                        <div>
+                            <div style="font-size: 14px; color: #8e8e93; margin-bottom: 4px;">ยินดีต้อนรับ</div>
+                            <h1>บ้านเดียร์ 🏠</h1>
+                        </div>
+                        <div class="icon">🔔</div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <div class="status-label">⚡ สถานะระบบ</div>
+                        <div style="font-size: 18px; font-weight: 600;">ออนไลน์ • 6 อุปกรณ์ทำงาน</div>
+                        <div class="status-value">อัพเดทล่าสุด: เมื่อ 5 วินาทีที่แล้ว</div>
+                    </div>
+                    
+                    <div class="power-card">
+                        <div class="power-label">กำลังไฟฟ้าใช้งานตอนนี้</div>
+                        <div class="power-value">1,247<span class="power-unit"> W</span></div>
+                        <div class="gauge-container">
+                            <div class="gauge-bg">
+                                <div class="gauge-fill"></div>
+                            </div>
+                            <div class="gauge-needle"></div>
+                            <div class="gauge-center"></div>
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 30px; margin-top: 10px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: 700; color: #1c1c1e;">220.5</div>
+                                <div style="font-size: 12px; color: #8e8e93;">Volt</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: 700; color: #1c1c1e;">5.66</div>
+                                <div style="font-size: 12px; color: #8e8e93;">Amp</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: 700; color: #1c1c1e;">0.95</div>
+                                <div style="font-size: 12px; color: #8e8e93;">PF</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">⚡ ใช้ไปวันนี้</div>
+                            <div class="stat-value">12.4</div>
+                            <div class="stat-sub">kWh ↑ 8% จากเมื่อวาน</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">📅 ใช้ไปเดือนนี้</div>
+                            <div class="stat-value">345</div>
+                            <div class="stat-sub">kWh ↓ 3% จากเดือนที่แล้ว</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-card">
+                        <div class="cost-header">
+                            <div class="cost-title">💰 ค่าไฟประมาณการ</div>
+                            <div class="cost-badge">รอบบิลปัจจุบัน</div>
+                        </div>
+                        <div class="cost-amount">฿1,847<span class="cost-unit">.50</span></div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">จากเป้าหมาย ฿3,000/เดือน</div>
+                        <div class="cost-bar">
+                            <div class="cost-bar-fill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-title">
+                        อุปกรณ์ที่ใช้งาน
+                        <a href="#">ดูทั้งหมด →</a>
+                    </div>
+                    
+                    <div class="device-list">
+                        <div class="device-item">
+                            <div class="device-icon active">❄️</div>
+                            <div class="device-info">
+                                <div class="device-name">แอร์ห้องนอน</div>
+                                <div class="device-status online">🟢 ออนไลน์ • ทำงานอยู่</div>
+                            </div>
+                            <div class="device-power">
+                                <div class="device-watt">850W</div>
+                            </div>
+                            <div class="device-toggle"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon active">📺</div>
+                            <div class="device-info">
+                                <div class="device-name">ทีวีห้องนั่งเล่น</div>
+                                <div class="device-status online">🟢 ออนไลน์ • ทำงานอยู่</div>
+                            </div>
+                            <div class="device-power">
+                                <div class="device-watt">120W</div>
+                            </div>
+                            <div class="device-toggle"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon">🌡️</div>
+                            <div class="device-info">
+                                <div class="device-name">ตู้เย็น</div>
+                                <div class="device-status online">🟢 ออนไลน์ • สแตนด์บาย</div>
+                            </div>
+                            <div class="device-power">
+                                <div class="device-watt">45W</div>
+                            </div>
+                            <div class="device-toggle off"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item active">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">หน้าหลัก</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">📊</div>
+                        <div class="nav-label">รายงาน</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">🔌</div>
+                        <div class="nav-label">อุปกรณ์</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">⚙️</div>
+                        <div class="nav-label">ตั้งค่า</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">1. Dashboard (หน้าหลัก)</div>
+    </div>
+
+    <!-- Screen 2: Device List -->
+    <div>
+        <div class="phone-frame">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="screen-content">
+                    <div class="header">
+                        <h1>อุปกรณ์ทั้งหมด</h1>
+                        <div class="icon">➕</div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card" style="background: #e8f5e9;">
+                            <div class="stat-label">🟢 ออนไลน์</div>
+                            <div class="stat-value" style="color: #34c759;">6</div>
+                        </div>
+                        <div class="stat-card" style="background: #ffebee;">
+                            <div class="stat-label">🔴 ออฟไลน์</div>
+                            <div class="stat-value" style="color: #ff3b30;">1</div>
+                        </div>
+                    </div>
+                    
+                    <div class="device-list">
+                        <div class="device-item">
+                            <div class="device-icon active">❄️</div>
+                            <div class="device-info">
+                                <div class="device-name">แอร์ห้องนอน</div>
+                                <div class="device-status online">🟢 ออนไลน์ • 850W</div>
+                            </div>
+                            <div class="device-toggle"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon active">📺</div>
+                            <div class="device-info">
+                                <div class="device-name">ทีวีห้องนั่งเล่น</div>
+                                <div class="device-status online">🟢 ออนไลน์ • 120W</div>
+                            </div>
+                            <div class="device-toggle"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon">🌡️</div>
+                            <div class="device-info">
+                                <div class="device-name">ตู้เย็น</div>
+                                <div class="device-status online">🟢 ออนไลน์ • 45W</div>
+                            </div>
+                            <div class="device-toggle off"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon active">💻</div>
+                            <div class="device-info">
+                                <div class="device-name">คอมพิวเตอร์</div>
+                                <div class="device-status online">🟢 ออนไลน์ • 180W</div>
+                            </div>
+                            <div class="device-toggle"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon">🔌</div>
+                            <div class="device-info">
+                                <div class="device-name">ปลั๊กห้องครัว</div>
+                                <div class="device-status">⏸️ ออฟไลน์ • --</div>
+                            </div>
+                            <div class="device-toggle off"></div>
+                        </div>
+                        
+                        <div class="device-item">
+                            <div class="device-icon">💡</div>
+                            <div class="device-info">
+                                <div class="device-name">ไฟสวน</div>
+                                <div class="device-status online">🟢 ออนไลน์ • 12W</div>
+                            </div>
+                            <div class="device-toggle off"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">หน้าหลัก</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">📊</div>
+                        <div class="nav-label">รายงาน</div>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">🔌</div>
+                        <div class="nav-label">อุปกรณ์</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">⚙️</div>
+                        <div class="nav-label">ตั้งค่า</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">2. Device List (รายการอุปกรณ์)</div>
+    </div>
+
+    <!-- Screen 3: Device Detail -->
+    <div>
+        <div class="phone-frame">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="screen-content">
+                    <div class="detail-header">
+                        <div class="back-btn">←</div>
+                        <div class="detail-title">แอร์ห้องนอน</div>
+                    </div>
+                    
+                    <div class="power-card" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                        <div class="power-label">กำลังไฟฟ้า</div>
+                        <div class="power-value" style="font-size: 48px;">850<span class="power-unit"> W</span></div>
+                        <div style="display: flex; justify-content: center; gap: 40px; margin-top: 20px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #1c1c1e;">220</div>
+                                <div style="font-size: 13px; color: #8e8e93;">Volt</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #1c1c1e;">3.86</div>
+                                <div style="font-size: 13px; color: #8e8e93;">Amp</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #1c1c1e;">0.98</div>
+                                <div style="font-size: 13px; color: #8e8e93;">PF</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="large-toggle">
+                        <div class="toggle-info">
+                            <h3>สถานะอุปกรณ์</h3>
+                            <p>เปิดอยู่ • ทำงานมา 4 ชม.</p>
+                        </div>
+                        <div class="toggle-switch"></div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">📊 การใช้ไฟย้อนหลัง</div>
+                        </div>
+                        <div class="chart-tabs">
+                            <div class="chart-tab active">วัน</div>
+                            <div class="chart-tab">สัปดาห์</div>
+                            <div class="chart-tab">เดือน</div>
+                        </div>
+                        <div class="chart-placeholder" style="margin-top: 15px;">
+                            <div class="chart-line"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #8e8e93;">
+                            <span>00:00</span>
+                            <span>06:00</span>
+                            <span>12:00</span>
+                            <span>18:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">⚡ วันนี้</div>
+                            <div class="stat-value">3.4</div>
+                            <div class="stat-sub">kWh</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">💰 ค่าไฟ</div>
+                            <div class="stat-value">17</div>
+                            <div class="stat-sub">บาท</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">หน้าหลัก</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">📊</div>
+                        <div class="nav-label">รายงาน</div>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">🔌</div>
+                        <div class="nav-label">อุปกรณ์</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">⚙️</div>
+                        <div class="nav-label">ตั้งค่า</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">3. Device Detail (รายละเอียดอุปกรณ์)</div>
+    </div>
+
+    <!-- Screen 4: Alerts -->
+    <div>
+        <div class="phone-frame">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="screen-content">
+                    <div class="header">
+                        <h1>การแจ้งเตือน</h1>
+                        <div class="icon" style="position: relative;">
+                            ⚙️
+                        </div>
+                    </div>
+                    
+                    <div class="status-card warning">
+                        <div class="status-label">⚠️ ใกล้ถึงเป้าหมาย</div>
+                        <div style="font-size: 18px; font-weight: 600;">ค่าไฟเดือนนี้ 65% ของงบ</div>
+                        <div class="status-value">เหลืออีก 10 วันในรอบบิล</div>
+                    </div>
+                    
+                    <div class="section-title">
+                        แจ้งเตือนล่าสุด
+                        <a href="#">ล้างทั้งหมด</a>
+                    </div>
+                    
+                    <div class="alert-item">
+                        <div class="alert-icon">⚡</div>
+                        <div class="alert-content">
+                            <div class="alert-title">ใช้ไฟเกิน 1,000W</div>
+                            <div class="alert-time">10 นาทีที่แล้ว • แอร์ห้องนอน</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-item" style="border-left-color: #34c759;">
+                        <div class="alert-icon" style="background: #e8f5e9;">🟢</div>
+                        <div class="alert-content">
+                            <div class="alert-title">อุปกรณ์กลับมาออนไลน์</div>
+                            <div class="alert-time">35 นาทีที่แล้ว • ตู้เย็น</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-item" style="border-left-color: #ff3b30;">
+                        <div class="alert-icon" style="background: #ffebee;">🔴</div>
+                        <div class="alert-content">
+                            <div class="alert-title">อุปกรณ์ออฟไลน์</div>
+                            <div class="alert-time">2 ชั่วโมงที่แล้ว • ปลั๊กห้องครัว</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-item">
+                        <div class="alert-icon">📊</div>
+                        <div class="alert-content">
+                            <div class="alert-title">รายงานประจำวันพร้อม</div>
+                            <div class="alert-time">วันนี้ 08:00 • ใช้ไฟ 12.4 kWh</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-title">การตั้งค่าแจ้งเตือน</div>
+                    
+                    <div class="device-item">
+                        <div class="device-icon">⚡</div>
+                        <div class="device-info">
+                            <div class="device-name">แจ้งเตือนเมื่อใช้ไฟเกิน</div>
+                            <div class="device-status">1,500W</div>
+                        </div>
+                        <div class="device-toggle"></div>
+                    </div>
+                    
+                    <div class="device-item">
+                        <div class="device-icon">💰</div>
+                        <div class="device-info">
+                            <div class="device-name">แจ้งเตือนงบค่าไฟ</div>
+                            <div class="device-status">80% ของงบเดือน</div>
+                        </div>
+                        <div class="device-toggle"></div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">หน้าหลัก</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">📊</div>
+                        <div class="nav-label">รายงาน</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">🔌</div>
+                        <div class="nav-label">อุปกร์</div>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">⚙️</div>
+                        <div class="nav-label">ตั้งค่า</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">4. Alerts & Notifications</div>
+    </div>
+
+    <!-- Screen 5: EV Charging -->
+    <div>
+        <div class="phone-frame">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="screen-content">
+                    <div class="header">
+                        <div>
+                            <div style="font-size: 14px; color: #8e8e93; margin-bottom: 4px;">EV Charging</div>
+                            <h1>🚗 ชาร์จรถยนต์</h1>
+                        </div>
+                        <div class="icon">⚡</div>
+                    </div>
+                    
+                    <div class="power-card" style="background: linear-gradient(135deg, #1c1c1e 0%, #434343 100%); color: white;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div style="font-size: 48px;">🚙</div>
+                            <div>
+                                <div style="font-size: 20px; font-weight: 700;">Tesla Model 3</div>
+                                <div style="font-size: 14px; opacity: 0.8;">กำลังชาร์จ • Home Charger</div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 25px 0;">
+                            <div style="font-size: 64px; font-weight: 700;">78<span style="font-size: 28px;">%</span></div>
+                            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">ประมาณ 45 นาทีจะเต็ม</div>
+                        </div>
+                        
+                        <div style="height: 12px; background: rgba(255,255,255,0.2); border-radius: 6px; overflow: hidden; margin: 15px 0;">
+                            <div style="width: 78%; height: 100%; background: linear-gradient(90deg, #34c759, #30d158); border-radius: 6px;"></div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 22px; font-weight: 700;">11.5</div>
+                                <div style="font-size: 12px; opacity: 0.7;">kW</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 22px; font-weight: 700;">48</div>
+                                <div style="font-size: 12px; opacity: 0.7;">A</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 22px; font-weight: 700;">235</div>
+                                <div style="font-size: 12px; opacity: 0.7;">V</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card" style="background: #e8f5e9;">
+                            <div class="stat-label">⚡ ชาร์จไปแล้ว</div>
+                            <div class="stat-value" style="color: #34c759;">28.5</div>
+                            <div class="stat-sub">kWh</div>
+                        </div>
+                        <div class="stat-card" style="background: #fff3e0;">
+                            <div class="stat-label">💰 ค่าไฟที่ใช้</div>
+                            <div class="stat-value" style="color: #ff9500;">142.5</div>
+                            <div class="stat-sub">บาท</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">⏱️ ตั้งเวลาชาร์จ</div>
+                        </div>
+                        <div class="device-item" style="margin-bottom: 10px;">
+                            <div class="device-icon" style="background: #e3f2fd;">🕐</div>
+                            <div class="device-info">
+                                <div class="device-name">ชาร์จทันที</div>
+                                <div class="device-status">เริ่มชาร์จตอนนี้</div>
+                            </div>
+                            <div class="device-toggle"></div>
+                        </div>
+                        <div class="device-item" style="margin-bottom: 10px;">
+                            <div class="device-icon" style="background: #f3e5f5;">🌙</div>
+                            <div class="device-info">
+                                <div class="device-name">ชาร์จช่วงดึก</div>
+                                <div class="device-status">22:00 - 06:00 (ค่าไฟถูก)</div>
+                            </div>
+                            <div class="device-toggle off"></div>
+                        </div>
+                        <div class="device-item">
+                            <div class="device-icon" style="background: #e8f5e9;">☀️</div>
+                            <div class="device-info">
+                                <div class="device-name">ชาร์จจากโซลาร์</div>
+                                <div class="device-status">ใช้พลังงานส่วนเกิน</div>
+                            </div>
+                            <div class="device-toggle off"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-card" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);">
+                        <div class="cost-header">
+                            <div class="cost-title">🔌 สถานะตู้ชาร์จ</div>
+                            <div class="cost-badge">พร้อมใช้งาน</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                            <div style="font-size: 24px;">✅</div>
+                            <div>
+                                <div style="font-size: 16px; font-weight: 600;">Wall Connector</div>
+                                <div style="font-size: 13px; opacity: 0.9;">11kW • 3 Phase</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">หน้าหลัก</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">📊</div>
+                        <div class="nav-label">รายงาน</div>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">🚗</div>
+                        <div class="nav-label">EV</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">⚙️</div>
+                        <div class="nav-label">ตั้งค่า</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">5. EV Home Charging</div>
+    </div>
+
+    <!-- Screen 6: Solar & Grid Energy -->
+    <div>
+        <div class="phone-frame">
+            <div class="screen">
+                <div class="notch"></div>
+                <div class="screen-content">
+                    <div class="header">
+                        <h1>☀️ พลังงานทางเลือก</h1>
+                        <div class="icon">⚡</div>
+                    </div>
+                    
+                    <div class="power-card" style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <div style="font-size: 32px;">☀️</div>
+                            <div>
+                                <div style="font-size: 14px; opacity: 0.9;">กำลังผลิตโซลาร์</div>
+                                <div style="font-size: 28px; font-weight: 700;">4,250 W</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 20px;">
+                            <div>
+                                <div style="font-size: 12px; opacity: 0.8;">วันนี้</div>
+                                <div style="font-size: 20px; font-weight: 600;">18.5 kWh</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; opacity: 0.8;">เดือนนี้</div>
+                                <div style="font-size: 20px; font-weight: 600;">456 kWh</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; opacity: 0.8;">CO₂ ลด</div>
+                                <div style="font-size: 20px; font-weight: 600;">228 kg</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Energy Flow Diagram -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">🔄 การไหลของพลังงาน</div>
+                        </div>
+                        <div style="position: relative; height: 200px; background: #f8f9fa; border-radius: 16px; padding: 20px;">
+                            <!-- Solar Panel -->
+                            <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); text-align: center;">
+                                <div style="font-size: 36px;">☀️</div>
+                                <div style="font-size: 12px; font-weight: 600;">Solar</div>
+                                <div style="font-size: 11px; color: #34c759;">4.25 kW</div>
+                            </div>
+                            
+                            <!-- Arrows down -->
+                            <div style="position: absolute; top: 55px; left: 50%; transform: translateX(-50%); font-size: 20px; color: #34c759;">↓</div>
+                            
+                            <!-- Home (Center) -->
+                            <div style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; background: white; padding: 10px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <div style="font-size: 28px;">🏠</div>
+                                <div style="font-size: 12px; font-weight: 600;">บ้าน</div>
+                                <div style="font-size: 11px; color: #007aff;">1.85 kW</div>
+                            </div>
+                            
+                            <!-- Grid -->
+                            <div style="position: absolute; top: 80px; left: 15px; text-align: center;">
+                                <div style="font-size: 28px;">🔌</div>
+                                <div style="font-size: 12px; font-weight: 600;">Grid</div>
+                                <div style="font-size: 11px; color: #ff3b30;">-0.5 kW</div>
+                            </div>
+                            
+                            <!-- Battery -->
+                            <div style="position: absolute; top: 80px; right: 15px; text-align: center;">
+                                <div style="font-size: 28px;">🔋</div>
+                                <div style="font-size: 12px; font-weight: 600;">แบตเตอรี่</div>
+                                <div style="font-size: 11px; color: #34c759;">+1.2 kW</div>
+                                <div style="font-size: 10px; color: #8e8e93;">85%</div>
+                            </div>
+                            
+                            <!-- EV -->
+                            <div style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); text-align: center;">
+                                <div style="font-size: 11px; color: #8e8e93;">⚡ → 🚗 EV</div>
+                                <div style="font-size: 11px; color: #ff9500;">0.7 kW</div>
+                            </div>
+                            
+                            <!-- Flow lines (simplified with arrows) -->
+                            <div style="position: absolute; top: 95px; left: 55px; font-size: 16px; color: #ff3b30;">←</div>
+                            <div style="position: absolute; top: 95px; right: 55px; font-size: 16px; color: #34c759;">→</div>
+                            <div style="position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); font-size: 16px; color: #ff9500;">↓</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9);">
+                            <div class="stat-label">☀️ ผลิตเอง</div>
+                            <div class="stat-value" style="color: #2e7d32;">75%</div>
+                            <div class="stat-sub">ของที่ใช้วันนี้</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ffebee, #ffcdd2);">
+                            <div class="stat-label">🔌 ซื้อจากการไฟฟ้า</div>
+                            <div class="stat-value" style="color: #c62828;">25%</div>
+                            <div class="stat-sub">ของที่ใช้วันนี้</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">📈 การผลิต vs การใช้ (วันนี้)</div>
+                        </div>
+                        <div class="chart-tabs">
+                            <div class="chart-tab active">วัน</div>
+                            <div class="chart-tab">สัปดาห์</div>
+                            <div class="chart-tab">เดือน</div>
+                        </div>
+                        <div class="chart-placeholder" style="margin-top: 15px; height: 120px;">
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 70%; background: linear-gradient(180deg, rgba(255,193,7,0.4) 0%, transparent 100%); clip-path: polygon(0% 100%, 0% 20%, 20% 10%, 40% 5%, 60% 15%, 80% 30%, 100% 60%, 100% 100%);"></div>
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(33,150,243,0.3) 0%, transparent 100%); clip-path: polygon(0% 100%, 0% 40%, 20% 35%, 40% 30%, 60% 45%, 80% 50%, 100% 55%, 100% 100%);"></div>
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px; font-size: 12px;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <div style="width: 12px; height: 12px; background: #ffc107; border-radius: 2px;"></div>
+                                <span>โซลาร์</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <div style="width: 12px; height: 12px; background: #2196f3; border-radius: 2px;"></div>
+                                <span>ใช้ไฟ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cost-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        <div class="cost-header">
+                            <div class="cost-title">💰 ประหยัดได้วันนี้</div>
+                        </div>
+                        <div class="cost-amount">฿92.5</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">จากการใช้ไฟจากโซลาร์เซลล์</div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                            <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                                <span>ขายไฟคืน Grid:</span>
+                                <span style="font-weight: 600;">+฿45.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 5px;">
+                                <span>ลดค่าไฟที่ซื้อ:</span>
+                                <span style="font-weight: 600;">+฿47.50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item">
+                        <div class="nav-icon">🏠</div>
+                        <div class="nav-label">หน้าหลัก</div>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">☀️</div>
+                        <div class="nav-label">โซลาร์</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">🚗</div>
+                        <div class="nav-label">EV</div>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">⚙️</div>
+                        <div class="nav-label">ตั้งค่า</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">6. Solar & Grid Energy</div>
+    </div>
+</body>
+</html>

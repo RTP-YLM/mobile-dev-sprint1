@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: homesync-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword123
+      - DOCKER_INFLUXDB_INIT_ORG=homesync
+      - DOCKER_INFLUXDB_INIT_BUCKET=poc_telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=homesync-poc-token-12345
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    networks:
+      - homesync-network
+
+  # Optional: PostgreSQL สำหรับข้อมูล device (ถ้าต้องการ)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: homesync-postgres
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=homesync
+  #     - POSTGRES_PASSWORD=homesync123
+  #     - POSTGRES_DB=homesync
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - homesync-network
+
+  # Optional: Grafana สำหรับ visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: homesync-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - homesync-network
+    depends_on:
+      - influxdb
+
+volumes:
+  influxdb-data:
+  # postgres-data:
+  grafana-data:
+
+networks:
+  homesync-network:
+    driver: bridge

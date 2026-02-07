@@ -1,0 +1,943 @@
+openapi: 3.0.3
+info:
+  title: Sprint 1 Authentication API
+  description: |
+    API Specification สำหรับ Sprint 1 - Authentication System
+    
+    ## Features
+    - User Registration with email verification
+    - JWT-based Authentication
+    - Password Reset
+    - Token Refresh
+    - User Profile Management
+    
+    ## Authentication
+    API นี้ใช้ JWT Bearer Token สำหรับการยืนยันตัวตน
+    
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    
+    ## Rate Limiting
+    - Authentication endpoints: 5 requests per minute
+    - General API: 100 requests per minute
+    - Admin endpoints: 30 requests per minute
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@example.com
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production server
+  - url: https://staging-api.example.com/api/v1
+    description: Staging server
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: User registration, login, and token management
+  - name: Password Management
+    description: Password reset and change operations
+  - name: User Profile
+    description: User profile viewing and updating
+  - name: Admin
+    description: Administrative operations (requires admin role)
+  - name: Health
+    description: Health check and system status
+
+paths:
+  # ==================== HEALTH ====================
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: ตรวจสอบสถานะของ API server
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  # ==================== AUTHENTICATION ====================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: สมัครสมาชิกใหม่ด้วย email และ password
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/verify-email:
+    get:
+      tags:
+        - Authentication
+      summary: Verify email address
+      description: ยืนยัน email ด้วย verification token
+      operationId: verifyEmail
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Email verification token
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '410':
+          description: Token expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/resend-verification:
+    post:
+      tags:
+        - Authentication
+      summary: Resend verification email
+      description: ส่ง verification email อีกครั้ง
+      operationId: resendVerification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: Verification email sent (or user not found - security)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: เข้าสู่ระบบด้วย email และ password
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Account not verified or suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: ขอ access token ใหม่โดยใช้ refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIs...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefreshResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+      description: ออกจากระบบและ revoke tokens
+      operationId: logoutUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Optional refresh token to revoke
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== PASSWORD MANAGEMENT ====================
+  /auth/forgot-password:
+    post:
+      tags:
+        - Password Management
+      summary: Request password reset
+      description: ขอลิงก์สำหรับรีเซ็ตรหัสผ่าน
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: Reset email sent (always returns 200 for security)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/reset-password:
+    post:
+      tags:
+        - Password Management
+      summary: Reset password with token
+      description: ตั้งรหัสผ่านใหม่โดยใช้ reset token
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/change-password:
+    post:
+      tags:
+        - Password Management
+      summary: Change password (authenticated)
+      description: เปลี่ยนรหัสผ่าน (ต้องการ current password)
+      operationId: changePassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== USER PROFILE ====================
+  /users/me:
+    get:
+      tags:
+        - User Profile
+      summary: Get current user profile
+      description: ดูข้อมูลโปรไฟล์ของตัวเอง
+      operationId: getMyProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags:
+        - User Profile
+      summary: Update user profile
+      description: แก้ไขข้อมูลโปรไฟล์ (ไม่อนุญาตให้แก้ไข email โดยตรง)
+      operationId: updateMyProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== ADMIN ====================
+  /admin/users:
+    get:
+      tags:
+        - Admin
+      summary: List all users (Admin only)
+      description: ดูรายชื่อผู้ใช้ทั้งหมดพร้อม pagination
+      operationId: listUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          description: Items per page
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, banned, pending]
+          description: Filter by user status
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [user, admin, moderator]
+          description: Filter by user role
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by email or name
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: created_at
+          description: Field to sort by
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort order
+      responses:
+        '200':
+          description: User list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/users/{id}/status:
+    patch:
+      tags:
+        - Admin
+      summary: Update user status (Admin only)
+      description: เปลี่ยนสถานะผู้ใช้ (active, suspended, banned)
+      operationId: updateUserStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [active, suspended, banned]
+                  example: suspended
+                reason:
+                  type: string
+                  description: Reason for status change
+                  example: Violation of terms of service
+      responses:
+        '200':
+          description: User status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  # ==================== SECURITY SCHEMES ====================
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token
+
+  # ==================== RESPONSES ====================
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Validation failed
+            errors:
+              - field: email
+                message: Invalid email format
+              - field: password
+                message: Password must be at least 8 characters
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Unauthorized
+            errors:
+              - message: Invalid or expired token
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Forbidden
+            errors:
+              - message: Admin access required
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Not found
+            errors:
+              - message: User not found
+
+    Conflict:
+      description: Conflict - resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Conflict
+            errors:
+              - message: Email already registered
+
+    TooManyRequests:
+      description: Too many requests - rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Request limit per window
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when limit resets
+          example:
+            success: false
+            message: Too many requests
+            errors:
+              - message: Rate limit exceeded. Try again in 60 seconds.
+
+  # ==================== SCHEMAS ====================
+  schemas:
+    # Base Responses
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation successful
+        data:
+          type: object
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: An error occurred
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-02-07T10:00:00Z'
+        version:
+          type: string
+          example: 1.0.0
+        uptime:
+          type: number
+          description: Server uptime in seconds
+          example: 86400
+
+    # Auth Requests & Responses
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - confirmPassword
+      properties:
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: SecurePass123!
+          description: Must contain at least 8 characters, 1 uppercase, 1 number, 1 special character
+        confirmPassword:
+          type: string
+          format: password
+          example: SecurePass123!
+        name:
+          type: string
+          maxLength: 100
+          example: John Doe
+
+    RegisterResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Registration successful. Please verify your email.
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            tokens:
+              $ref: '#/components/schemas/Tokens'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: SecurePass123!
+        rememberMe:
+          type: boolean
+          default: false
+          description: Extend refresh token expiry to 30 days
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login successful
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+            tokens:
+              $ref: '#/components/schemas/Tokens'
+
+    TokenRefreshResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Token refreshed successfully
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            refreshToken:
+              type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            expiresIn:
+              type: integer
+              description: Access token expiry in seconds
+              example: 900
+
+    # Password Management
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+        - confirmPassword
+      properties:
+        token:
+          type: string
+          example: abc123def456...
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: NewSecurePass456!
+        confirmPassword:
+          type: string
+          format: password
+          example: NewSecurePass456!
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+        - confirmPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          example: OldPass123!
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          example: NewSecurePass456!
+        confirmPassword:
+          type: string
+          format: password
+          example: NewSecurePass456!
+
+    # User Profile
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: John Updated
+        avatar:
+          type: string
+          format: uri
+          example: https://example.com/avatars/john.png
+        phone:
+          type: string
+          pattern: '^[0-9+\-\s()]+$'
+          example: +66 81 234 5678
+
+    UserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserSummary'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    # Common Models
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        name:
+          type: string
+          example: John Doe
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          example: user
+        status:
+          type: string
+          enum: [active, pending, suspended, banned]
+          example: pending
+        emailVerified:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-07T10:00:00Z'
+
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            avatar:
+              type: string
+              format: uri
+              nullable: true
+            phone:
+              type: string
+              nullable: true
+            lastLogin:
+              type: string
+              format: date-time
+              nullable: true
+            updatedAt:
+              type: string
+              format: date-time
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Tokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: integer
+          description: Access token expiry in seconds
+          example: 900
+        tokenType:
+          type: string
+          example: Bearer
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalPages:
+          type: integer
+          example: 5
+        totalItems:
+          type: integer
+          example: 100
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPrevPage:
+          type: boolean
+          example: false

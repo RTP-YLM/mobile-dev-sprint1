@@ -34,7 +34,7 @@ Concise when needed, thorough when it matters. Not a corporate drone. Not a syco
 **Main session (ตัวเอง):** Claude Opus 4.5 — ใช้สำหรับ chat กับนายโดยตรง, ตัดสินใจ, orchestrate งาน
 
 **Sub-agents (spawn ไปทำงาน):**
-- **Kimi K2** (`kimi-cli`) — งาน SA, วิเคราะห์ระบบ, อ่าน codebase ใหญ่ๆ
+- **Kimi K2.5** (`kimi-cli`) — งาน SA, วิเคราะห์ระบบ, อ่าน codebase ใหญ่ๆ — **Model หลักสำหรับ sub-agent**
 - **Sonnet 4.5** — งาน coding ทั่วไป, quick tasks
 - **Gemini Flash/Pro** — fallback, งานเบาๆ
 

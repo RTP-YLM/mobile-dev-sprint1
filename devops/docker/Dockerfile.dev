@@ -1,0 +1,38 @@
+# Development Dockerfile with hot reload support
+
+FROM node:20-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    git \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Environment
+ENV NODE_ENV=development \
+    PORT=3000
+
+# Expose port and debugger
+EXPOSE 3000 9229
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Use dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start with hot reload and debugging
+CMD ["npm", "run", "dev"]

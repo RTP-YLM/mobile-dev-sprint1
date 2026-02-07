@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API - Sprint 1</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 { color: #333; }
+        .endpoint {
+            background: #f4f4f4;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .method { 
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>🚀 API Documentation</h1>
+    <p>Welcome to the API. Below are the available endpoints:</p>
+    
+    <div class="endpoint">
+        <span class="method">GET</span>
+        <a href="/health">/health</a>
+        <p>Comprehensive health check with database, redis, and memory status</p>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method">GET</span>
+        <a href="/health/ready">/health/ready</a>
+        <p>Readiness probe - checks if service is ready to accept traffic</p>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method">GET</span>
+        <a href="/health/live">/health/live</a>
+        <p>Liveness probe - checks if service is alive</p>
+    </div>
+    
+    <div class="endpoint">
+        <span class="method">GET</span>
+        <a href="/">/</a>
+        <p>API information and version</p>
+    </div>
+    
+    <hr>
+    <p><small>Version 1.0.0 | Sprint 1 | CI/CD Pipeline</small></p>
+</body>
+</html>

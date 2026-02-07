@@ -2,55 +2,89 @@
 
 Authentication & Infrastructure Foundation
 
-## 📁 Repository Structure
+## 📁 Project Structure
 
 ```
-├── docs/                          # Documentation
-│   ├── sa/                       # SA (เจน) - PRD, Test Cases, API Spec
-│   ├── backend/                  # Backend (ต้น) - Architecture, DB Schema
-│   ├── mobile/                   # Mobile (บีม) - Architecture, UI/UX Flows
-│   └── qa/                       # QA (มิ้นท์) - Test Plan, Test Cases
-├── ios/                          # iOS (ปัน) - SwiftUI Components & Screens
-├── devops/                       # DevOps (ฟลุ๊ค) - CI/CD, Docker, Terraform
-└── sprint-1-plan.md             # Sprint 1 Master Plan
+├── backend/              # Backend API (Node.js + Express + TypeScript)
+│   ├── src/             # Source code
+│   ├── tests/           # Unit tests
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── README.md
+│
+├── mobile/              # iOS App (SwiftUI + MVVM)
+│   ├── MobileApp/       # Main app source
+│   ├── MobileAppTests/  # Unit tests
+│   ├── MobileAppUITests/
+│   └── README.md
+│
+├── devops/              # CI/CD & Infrastructure
+│   ├── docker/          # Docker configs
+│   ├── workflows/       # GitHub Actions
+│   ├── terraform/       # Infrastructure as Code
+│   └── README.md
+│
+├── tests/               # Integration Tests
+│   ├── integration/     # API integration tests
+│   ├── fixtures/        # Test data
+│   └── postman/         # Postman collections
+│
+├── docs/                # Documentation
+│   ├── sa/              # SA docs (PRD, API Spec)
+│   ├── backend/         # Backend architecture
+│   ├── mobile/          # Mobile architecture
+│   └── qa/              # Test plans
+│
+└── README.md            # This file
+```
+
+## 🚀 Quick Start
+
+### Backend
+```bash
+cd backend
+npm install
+npm run dev          # Start at http://localhost:3000
+```
+
+### Mobile (iOS)
+```bash
+cd mobile
+# Open in Xcode: File → Open Folder... → mobile/
+# Or: open MobileApp.xcodeproj
+```
+
+### Dev Environment
+```bash
+cd devops/docker
+docker-compose up -d  # Start PostgreSQL + Backend
+```
+
+### Run Tests
+```bash
+cd backend
+npm test              # Unit tests
+npm run test:api      # Integration tests
 ```
 
 ## 👥 Team
 
 | Role | Name | Deliverable |
 |------|------|-------------|
-| SA | เจน | PRD, Test Cases, DoD, OpenAPI Spec |
-| Backend | ต้น | DB Schema, Auth API, JWT Flow |
-| Mobile Lead | บีม | Clean Arch, UI/UX Flows, Riverpod |
-| iOS Dev | ปัน | SwiftUI Components, Auth Screens |
+| SA | เจน | PRD, API Spec, DoD |
+| Backend | ต้น | Auth API, Database |
+| Mobile Lead | บีม | Architecture, UI/UX Flow |
+| iOS Dev | ปัน | SwiftUI Screens |
 | DevOps | ฟลุ๊ค | CI/CD, Docker, Terraform |
-| QA | มิ้นท์ | Test Plan, 27 Test Cases |
+| QA | มิ้นท์ | Test Plan, 43+ Tests |
 
-## 🎯 Sprint 1 Goal
-
-> Establish solid technical foundation and deliver core authentication flow with basic app infrastructure
-
-- **15 User Stories** | **46 Story Points** | **160 Hours**
-
-## 🚀 Quick Start
-
-### Backend
-```bash
-cd devops/docker
-docker-compose up -d
-```
-
-### iOS
-```bash
-cd ios/auth
-# Open in Xcode
-```
-
-## 📊 Stats
+## 📊 Sprint Stats
 
 - **Duration**: 2 weeks
-- **Team Size**: 6 people
-- **Status**: ✅ Planning Complete
+- **User Stories**: 15
+- **Story Points**: 46
+- **Team Size**: 6
+- **Status**: ✅ Complete
 
 ---
 

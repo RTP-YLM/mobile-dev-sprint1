@@ -1,0 +1,92 @@
+{
+  "validUsers": [
+    {
+      "id": "usr_001",
+      "email": "qa.user1@test.com",
+      "password": "Test@1234",
+      "passwordHash": "$2b$10$abcdefghijklmnopqrstuvwxyz123456789",
+      "name": "QA User One",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "id": "usr_002",
+      "email": "qa.user2@test.com",
+      "password": "Test@5678",
+      "passwordHash": "$2b$10$zyxwvutsrqponmlkjihgfedcba987654321",
+      "name": "QA User Two",
+      "role": "user",
+      "status": "active",
+      "createdAt": "2026-02-02T00:00:00.000Z"
+    },
+    {
+      "id": "usr_003",
+      "email": "qa.inactive@test.com",
+      "password": "Test@1234",
+      "passwordHash": "$2b$10$inactive1234567890abcdefghijklmnop",
+      "name": "Inactive User",
+      "role": "user",
+      "status": "inactive",
+      "createdAt": "2026-01-15T00:00:00.000Z"
+    }
+  ],
+  "newUsers": [
+    {
+      "email": "newuser1@test.com",
+      "password": "Pass@word1",
+      "name": "New User One"
+    },
+    {
+      "email": "newuser2@test.com",
+      "password": "Secure#2026",
+      "name": "New User Two"
+    },
+    {
+      "email": "test.user+tag@test.com",
+      "password": "Valid@123",
+      "name": "Tagged Email User"
+    }
+  ],
+  "invalidUsers": {
+    "existingEmail": {
+      "email": "qa.user1@test.com",
+      "password": "Test@1234",
+      "expectedError": "Email already registered"
+    },
+    "invalidEmail": {
+      "email": "invalid-email",
+      "password": "Test@1234",
+      "expectedError": "Invalid email format"
+    },
+    "weakPassword": {
+      "email": "test@test.com",
+      "password": "123456",
+      "expectedError": "Password too weak"
+    },
+    "shortPassword": {
+      "email": "test@test.com",
+      "password": "Abc@1",
+      "expectedError": "Password must be at least 8 characters"
+    },
+    "noSpecialChar": {
+      "email": "test@test.com",
+      "password": "Password123",
+      "expectedError": "Password must contain a special character"
+    }
+  },
+  "securityTests": {
+    "sqlInjection": [
+      "admin' OR '1'='1",
+      "admin'--",
+      "admin' OR '1'='1' /*",
+      "'; DROP TABLE users; --",
+      "1' UNION SELECT * FROM users--"
+    ],
+    "xssTests": [
+      "<script>alert('XSS')</script>",
+      "javascript:alert(1)",
+      "<img src=x onerror=alert(1)>"
+    ]
+  }
+}
